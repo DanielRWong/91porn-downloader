@@ -1,0 +1,9 @@
+.idea/
+__pycache__/
+/tmp/
+/output/
+/build/
+/dist/
+*.spec
+/release/
+*.pyo
