@@ -10,7 +10,7 @@ class Cracker(object):
         return execjs.compile(js)
 
     def get_js(self):
-        with open("./common/jscracker/m2.js", "r") as f:
+        with open('./common/jscracker/m2.js', 'r') as f:
             return f.read()
 
     def crack(self, code):

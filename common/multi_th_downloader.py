@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import os
 import threading
 
 from utils.log import logger
-from config.config import th_number
 from common.downloader import Downloader
+from common.get_config import get_th_number
 from config.m3u8_list import m3u8_list as m3u8_list_file
 
 log = logger()
@@ -19,7 +18,7 @@ def worker():
                 break
         downloader = Downloader(task[0], task[1])
         if downloader.pre_check():
-            log.warning(f"文件“{task[1]}”已存在或链接格式不正确！")
+            log.warning(f'文件“{task[1]}”已存在或链接格式不正确！')
             continue
         downloader.run()
 
@@ -28,7 +27,8 @@ def download_multi_thread(m3u8_list=None):
     download_list = m3u8_list if m3u8_list is not None else m3u8_list_file
     lock = threading.Lock()
     th_list = []
-    for _ in range(th_number):
+    th_number = get_th_number()
+    for _ in range(int(th_number)):
         th = threading.Thread(target=worker)
         th.start()
         th_list.append(th)

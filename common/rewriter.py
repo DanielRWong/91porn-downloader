@@ -8,7 +8,7 @@ class Rewriter(object):
     """
     @classmethod
     def rewrite_config(cls, config_file, old_config, new_config):
-        with open(config_file, 'r+', encoding="utf-8") as f:
+        with open(config_file, 'r+', encoding='utf-8') as f:
             old = f.read()
             f.seek(0)
             new = re.sub(old_config, new_config, old)

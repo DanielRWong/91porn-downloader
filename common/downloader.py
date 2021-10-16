@@ -5,8 +5,9 @@ import os
 import requests
 from retrying import retry
 
-from config.config import *
 from utils.log import logger
+from config.config import (headers, base_url)
+from common.get_config import get_output_path
 
 log = logger()
 
@@ -23,18 +24,18 @@ class Downloader(object):
         return os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
     def get_video_name(self, video_name):
-        return video_name.replace(" ","_")
+        return video_name.replace(' ','_')
 
     def get_output_name(self):
-        global output_path
-        output_path = (output_path if output_path.endswith("\\") else output_path + "\\")
-        return f"{output_path}{self.video_name}.mp4"
+        output_dir = get_output_path()
+        output_path = output_dir if output_dir.endswith('\\') else output_dir + '\\'
+        return f'{output_path}{self.video_name}.mp4'
 
     def get_ts_dir_path(self):
-        return f"{self.base_dir}\\tmp\{self.video_id}\\"
+        return f'{self.base_dir}\\tmp\{self.video_id}\\'
 
     def get_video_id(self):
-        re_res = re.findall("/(\d+)\.m3u8*", self.m3u8_url)
+        re_res = re.findall('/(\d+)\.m3u8*', self.m3u8_url)
         return re_res[0]
 
     def check_path(self):
@@ -57,7 +58,7 @@ class Downloader(object):
         检查是否是m3u8链接
         :return:
         """
-        return self.m3u8_url.find("m3u8") != -1
+        return self.m3u8_url.find('m3u8') != -1
 
     def pre_check(self):
         return  self.check_m3u8_url() & self.check_output_exit()
@@ -74,9 +75,9 @@ class Downloader(object):
         pass
 
     def run(self):
-        log.info(f"Start download {self.video_name} {self.m3u8_url}")
+        log.info(f'Start download {self.video_name} {self.m3u8_url}')
         self.check_path()
-        m3u8_file_str = fr"{self.base_dir}\tmp\{self.video_id}\download.m3u8"
+        m3u8_file_str = fr'{self.base_dir}\tmp\{self.video_id}\download.m3u8'
         if not os.path.exists(m3u8_file_str):
             m3u8_content = requests.get(self.m3u8_url, headers=headers).text
             with open(m3u8_file_str, 'w') as m3u8_file:
@@ -84,46 +85,46 @@ class Downloader(object):
         with open(m3u8_file_str, 'r') as m3u8_file:
             ts_ids = []
             for line in m3u8_file:
-                if "#" not in line:
+                if '#' not in line:
                     ts_id = line.replace('.ts\n', '')
                     ts_ids.append(ts_id)
-        files = ""
+        files = ''
         count = 0
         merge = False
         merge_id = 0
         merge_name_list = []
         for ts_id in ts_ids:
-            ts_file = self.ts_dir + ts_id + ".ts"
+            ts_file = self.ts_dir + ts_id + '.ts'
             if not os.path.exists(ts_file):
-                url = base_url + self.video_id + "/" + ts_id + ".ts"
+                url = base_url + self.video_id + '/' + ts_id + '.ts'
                 content = self.get_content(url)
-                with open(ts_file, "wb") as f:
+                with open(ts_file, 'wb') as f:
                     f.write(content)
-            files += ts_file + "|"
+            files += ts_file + '|'
             count += 1
             if count > 49:
                 merge = True
-                merge_name = fr"{self.base_dir}\tmp\{self.video_id}\merge{str(merge_id)}.ts"
+                merge_name = fr'{self.base_dir}\tmp\{self.video_id}\merge{str(merge_id)}.ts'
                 merge_name_list.append(merge_name)
-                order_str = f"ffmpeg -i \"concat:{files}\"  -c copy {merge_name} -y"
-                log.info(f"Merge viedeo {self.video_name} {str(merge_id)}")
+                order_str = f'ffmpeg -i \"concat:{files}\"  -c copy {merge_name} -y'
+                log.info(f'Merge viedeo {self.video_name} {str(merge_id)}')
                 self.transform(order_str)
                 count = 0
-                files = ""
+                files = ''
                 merge_id += 1
         if merge == False:
-            log.info(f"Out put video {self.video_name}")
-            merge_order = f"ffmpeg -i \"concat:{files}\" -c copy {self.output_name}"
+            log.info(f'Out put video {self.video_name}')
+            merge_order = f'ffmpeg -i \"concat:{files}\" -c copy {self.output_name}'
         else:
-            if files != "":
-                merge_name = fr"{self.base_dir}\tmp\{self.video_id}\merge{str(merge_id)}.ts"
+            if files != '':
+                merge_name = fr'{self.base_dir}\tmp\{self.video_id}\merge{str(merge_id)}.ts'
                 merge_name_list.append(merge_name)
-                order_str = f"ffmpeg -i \"concat:{files}\" -c copy {merge_name} -y"
-                log.info(f"Merge viedeo {self.video_name} {str(merge_id)}")
+                order_str = f'ffmpeg -i \"concat:{files}\" -c copy {merge_name} -y'
+                log.info(f'Merge viedeo {self.video_name} {str(merge_id)}')
                 self.transform(order_str)
-            merge_name_str = "|".join(merge_name_list)
-            log.info(f"Out put video {self.video_name}")
-            merge_order = f"ffmpeg -i \"concat:{merge_name_str}\" -c copy {self.output_name}"
+            merge_name_str = '|'.join(merge_name_list)
+            log.info(f'Out put video {self.video_name}')
+            merge_order = f'ffmpeg -i \"concat:{merge_name_str}\" -c copy {self.output_name}'
         self.transform(merge_order)
 
     def __del__(self):

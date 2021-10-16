@@ -4,7 +4,7 @@ import sys
 
 from PyQt5.QtWidgets import QApplication
 
-from ui.ui import MainWindow
+from ui.downloader_ui import MainWindow
 
 
 def run():
@@ -14,5 +14,5 @@ def run():
     sys.exit(app.exec_())
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     run()
