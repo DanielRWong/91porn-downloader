@@ -6,6 +6,7 @@ import requests
 from retrying import retry
 
 from utils.log import logger
+from utils.get_path import get_base_dir
 from config.config import (headers, base_url)
 from common.get_config import get_output_path
 
@@ -16,12 +17,9 @@ class Downloader(object):
         self.m3u8_url = m3u8_url
         self.video_name = self.get_video_name(video_name)
         self.video_id = self.get_video_id()  # 91porn
-        self.base_dir = self.get_base_dir()
+        self.base_dir = get_base_dir()
         self.ts_dir = self.get_ts_dir_path()  # "D:\py\m3u8\91porn-downloader\tmp\66666\"
         self.output_name = self.get_output_name()
-
-    def get_base_dir(self):
-        return os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
     def get_video_name(self, video_name):
         return video_name.replace(' ','_')

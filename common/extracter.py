@@ -18,7 +18,7 @@ def legal_url(url):
     :param url:
     :return:
     """
-    return True if re.findall('https://www\.91porn\.com/view_video\.php\?viewkey=\w+&page=\d*&viewtype=\w*&category=\w*', url)\
+    return True if re.findall('https://www\.91porn\.com/view_video\.php\?viewkey=\w+', url)\
         else False
 
 
