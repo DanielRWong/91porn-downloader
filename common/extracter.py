@@ -18,9 +18,8 @@ def legal_url(url):
     :param url:
     :return:
     """
-    return True if re.findall('https://www\.91porn\.com/view_video\.php\?viewkey=\w+', url)\
+    return True if re.findall('view_video\.php\?viewkey=\w+', url)\
         else False
-
 
 def worker(url):
     log.info(f'Get url: {url}')
@@ -28,7 +27,10 @@ def worker(url):
     page = etree.HTML(response)
     jscode = re.findall('document\.write\(strencode2\((.*?)\)', response)
     jsres = jscracker.crack(jscode)
-    m3u8_url = re.findall('src=\'(.*?)\'', jsres)[0]
+    try:
+        m3u8_url = re.findall('src=\'(.*?)\'', jsres)[0]
+    except:
+        log.info(f'Extract error: {url}')
     video_name = ''.join(page.xpath('//div[@id="videodetails"][1]/h4/text()')).strip()
     log.info(f'url:{url} get \n\tm3u8 url: {m3u8_url}\n\t video name: {video_name}')
     m3u8_list.append((m3u8_url, video_name))
@@ -56,5 +58,6 @@ def extrcat_url(input_text):
         th_list.append(th)
     for th in th_list:
         th.join()
+    log.info(f'From {len(url_list)} urls get {len(m3u8_list)} m3u8 urls')
     log.info(f'Get m3u8 list: {str(m3u8_list)}')
     return m3u8_list
