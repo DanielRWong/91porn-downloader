@@ -7,6 +7,6 @@ headers = {
             'accept-language': 'zh-CN,zh;q=0.9,en;q=0.8',
         }
 
-output_path = 'F:/20211016'  # 指定下载目录
+output_path = 'F:/20211025'  # 指定下载目录
 
 th_number = 20  # 指定线程数定线程数定线程数

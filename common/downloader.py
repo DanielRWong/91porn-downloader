@@ -8,7 +8,7 @@ from retrying import retry
 from utils.log import logger
 from utils.get_path import get_base_dir
 from config.config import (headers, base_url)
-from common.get_config import get_output_path
+from utils.get_config import get_output_path
 
 log = logger()
 
@@ -22,7 +22,7 @@ class Downloader(object):
         self.output_name = self.get_output_name()
 
     def get_video_name(self, video_name):
-        return video_name.replace(' ','_')
+        return video_name.replace(' ','_').replace('&','_')
 
     def get_output_name(self):
         output_dir = get_output_path()
@@ -49,16 +49,29 @@ class Downloader(object):
         检查输出结果文件是否存在
         :return:
         """
-        return os.path.exists(self.output_name)
+        if os.path.exists(self.output_name):
+            log.warning(f'文件 “{self.video_name}” 已存在！')
+            return False
+        else:
+            return True
 
     def check_m3u8_url(self):
         """
         检查是否是m3u8链接
         :return:
         """
-        return self.m3u8_url.find('m3u8') != -1
+        if self.m3u8_url.find('m3u8') != -1:
+            return True
+        else:
+            log.warning(f'文件 “{self.video_name}” {self.m3u8_url} 链接格式不正确！')
+            return False
 
     def pre_check(self):
+        """
+        True: 没有问题
+        False: 有问题
+        :return:
+        """
         return  self.check_m3u8_url() & self.check_output_exit()
 
     def transform(self, order):

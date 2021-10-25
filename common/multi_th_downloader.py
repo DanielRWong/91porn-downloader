@@ -4,7 +4,7 @@ import threading
 
 from utils.log import logger
 from common.downloader import Downloader
-from common.get_config import get_th_number
+from utils.get_config import get_th_number
 from config.m3u8_list import m3u8_list as m3u8_list_file
 
 log = logger()
@@ -17,8 +17,7 @@ def worker():
             except IndexError:
                 break
         downloader = Downloader(task[0], task[1])
-        if downloader.pre_check():
-            log.warning(f'文件“{task[1]}”已存在或链接格式不正确！')
+        if not downloader.pre_check():
             continue
         downloader.run()
 
