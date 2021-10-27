@@ -18,8 +18,11 @@ def legal_url(url):
     :param url:
     :return:
     """
-    return True if re.findall('view_video\.php\?viewkey=\w+', url)\
-        else False
+    if re.findall('view_video\.php\?viewkey=\w+', url):
+        return True
+    else:
+        log.warning(f'Url: {url} 格式不正确！')
+        return False
 
 def worker():
     while True:
@@ -53,10 +56,9 @@ def extrcat_url(input_text):
     origin_url_list = input_text.split('\n')
     for url in origin_url_list:
         if not legal_url(url):
-            log.warning(f'Url: {url}格式不正确！')
             continue
         url_list.append(url)
-    log.info(f'Get url list: {str(url_list)}')
+    log.info(f'Get {len(url_list)} urls : {str(url_list)}')
     global cfdownloader, jscracker, lock
     lock = threading.Lock()
     cfdownloader = CFDownloader()
@@ -69,6 +71,5 @@ def extrcat_url(input_text):
         th_list.append(th)
     for th in th_list:
         th.join()
-    log.info(f'From {len(url_list)} urls get {len(m3u8_list)} m3u8 urls')
-    log.info(f'Get m3u8 list: {str(m3u8_list)}')
+    log.info(f'Get {len(m3u8_list)} m3u8 urls: {str(m3u8_list)}')
     return m3u8_list
