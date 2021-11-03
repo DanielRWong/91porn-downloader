@@ -22,7 +22,7 @@ class Downloader(object):
         self.output_name = self.get_output_name()
 
     def get_video_name(self, video_name):
-        return video_name.replace(' ','_').replace('&','_')
+        return video_name.replace(' ','_').replace('&','_').replace(':', ' ').replace('：', ' ')
 
     def get_output_name(self):
         output_dir = get_output_path()
