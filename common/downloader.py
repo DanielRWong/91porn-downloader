@@ -2,13 +2,15 @@
 
 import re
 import os
+import copy
 import requests
+import threading
 from retrying import retry
 
 from utils.log import logger
-from utils.get_path import get_base_dir
+from utils.path import get_basedir_path
 from config.config import (headers, base_url)
-from utils.get_config import get_output_path
+from utils.get_config import get_output_path, get_th_number
 
 log = logger()
 
@@ -16,9 +18,9 @@ class Downloader(object):
     def __init__(self, m3u8_url, video_name):
         self.m3u8_url = m3u8_url
         self.video_name = self.get_video_name(video_name)
-        self.video_id = self.get_video_id()  # 91porn
-        self.base_dir = get_base_dir()
-        self.ts_dir = self.get_ts_dir_path()  # "D:\py\m3u8\91porn-downloader\tmp\66666\"
+        self.video_id = self.get_video_id()
+        self.base_dir = get_basedir_path()
+        self.ts_dir = self.get_ts_dir_path()
         self.output_name = self.get_output_name()
 
     def get_video_name(self, video_name):
@@ -85,6 +87,23 @@ class Downloader(object):
     def log_succ(self, video_name):
         pass
 
+    def get_ts_file(self, ts_id):
+        ts_file = self.ts_dir + ts_id + '.ts'
+        if not os.path.exists(ts_file):
+            url = base_url + self.video_id + '/' + ts_id + '.ts'
+            content = self.get_content(url)
+            with open(ts_file, 'wb') as f:
+                f.write(content)
+
+    def worker(self):
+        while True:
+            with downloaderlock:
+                try:
+                    ts_id = ts_ids.pop()
+                except IndexError:
+                    break
+            self.get_ts_file(ts_id)
+
     def run(self):
         log.info(f'Start download {self.video_name} {self.m3u8_url}')
         self.check_path()
@@ -93,54 +112,54 @@ class Downloader(object):
             m3u8_content = requests.get(self.m3u8_url, headers=headers).text
             with open(m3u8_file_str, 'w') as m3u8_file:
                 m3u8_file.write(m3u8_content)
+        global ts_ids
         with open(m3u8_file_str, 'r') as m3u8_file:
             ts_ids = []
             for line in m3u8_file:
                 if '#' not in line:
                     ts_id = line.replace('.ts\n', '')
                     ts_ids.append(ts_id)
-        files = ''
-        count = 0
-        merge = False
-        merge_id = 0
-        merge_name_list = []
-        for ts_id in ts_ids:
-            ts_file = self.ts_dir + ts_id + '.ts'
-            if not os.path.exists(ts_file):
-                url = base_url + self.video_id + '/' + ts_id + '.ts'
-                content = self.get_content(url)
-                with open(ts_file, 'wb') as f:
-                    f.write(content)
-            files += ts_file + '|'
-            count += 1
-            if count > 49:
-                merge = True
-                merge_name = fr'{self.base_dir}\tmp\{self.video_id}\merge{str(merge_id)}.ts'
-                merge_name_list.append(merge_name)
-                order_str = f'ffmpeg -i \"concat:{files}\"  -c copy {merge_name} -y'
-                log.info(f'Merge viedeo {self.video_name} {str(merge_id)}')
-                self.transform(order_str)
-                count = 0
-                files = ''
-                merge_id += 1
-        if merge == False:
-            log.info(f'Out put video {self.video_name}')
-            merge_order = f'ffmpeg -i \"concat:{files}\" -c copy {self.output_name}'
+        th_list = []
+        ts_ids_copy = copy.copy(ts_ids)
+        global downloaderlock
+        downloaderlock = threading.Lock()
+        for _ in range(int(get_th_number())):
+            th = threading.Thread(target=self.worker)
+            th.start()
+            th_list.append(th)
+        for th in th_list:
+            th.join()
+        ts_ids_len = len(ts_ids_copy)
+        files = os.listdir(self.ts_dir)
+        ts_file_count = 0
+        ts_files = []
+        for file in files:
+            if file[0].isdigit():
+                ts_file_count += 1
+                ts_files.append(file)
+        assert ts_ids_len == ts_file_count
+        start = 0
+        end = 50
+        ts_files = sorted(os.listdir(self.ts_dir))
+        merge_count = 0
+        while start < ts_ids_len:
+            split = ts_files[start:end]
+            ts_files_str = ''
+            for ts in split:
+                ts_files_str += self.ts_dir + ts + '|'
+            merge_name = fr'{self.base_dir}\tmp\{self.video_id}\merge{str(merge_count)}.ts'
+            order_str = f'ffmpeg -i \"concat:{ts_files_str}\"  -c copy {merge_name} -y'
+            log.info(f'Merge viedeo {self.video_name} {str(merge_count)}')
+            merge_count += 1
+            self.transform(order_str)
+            start += 50
+            end += 50
+        merge_files = ''
+        if merge_count > 0:
+            for merge_id in range(merge_count):
+                merge_files += fr'{self.base_dir}\tmp\{self.video_id}\merge{merge_id}.ts|'
         else:
-            if files != '':
-                merge_name = fr'{self.base_dir}\tmp\{self.video_id}\merge{str(merge_id)}.ts'
-                merge_name_list.append(merge_name)
-                order_str = f'ffmpeg -i \"concat:{files}\" -c copy {merge_name} -y'
-                log.info(f'Merge viedeo {self.video_name} {str(merge_id)}')
-                self.transform(order_str)
-            merge_name_str = '|'.join(merge_name_list)
-            log.info(f'Out put video {self.video_name}')
-            merge_order = f'ffmpeg -i \"concat:{merge_name_str}\" -c copy {self.output_name}'
-        self.transform(merge_order)
-
-    def __del__(self):
-        try:
-            # shutil.rmtree(self.ts_dir)
-            pass
-        except Exception as e:
-            print(e)
+            merge_files += fr'{self.base_dir}\tmp\{self.video_id}\merge0.ts'
+        order_str = f'ffmpeg -i \"concat:{merge_files}\"  -c copy {self.output_name} -y'
+        log.info(f'Out put video {self.video_name}')
+        self.transform(order_str)

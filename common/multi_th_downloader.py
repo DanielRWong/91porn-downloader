@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import threading
+import multiprocessing
 
 from utils.log import logger
 from common.downloader import Downloader
@@ -9,17 +10,22 @@ from config.m3u8_list import m3u8_list as m3u8_list_file
 
 log = logger()
 
-def worker():
+def  worker():
     while True:
         with lock:
             try:
                 task = download_list.pop()
             except IndexError:
                 break
-        downloader = Downloader(task[0], task[1])
-        if not downloader.pre_check():
-            continue
-        downloader.run()
+        proc = multiprocessing.Process(target=wrapper,args=(task,))
+        proc.start()
+        proc.join()
+
+def wrapper(task):
+    downloader = Downloader(task[0], task[1])
+    if not downloader.pre_check():
+        return
+    downloader.run()
 
 def download_multi_thread(m3u8_list=None):
     global download_list, lock
