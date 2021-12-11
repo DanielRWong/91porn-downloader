@@ -6,10 +6,11 @@ import copy
 import requests
 import threading
 from retrying import retry
+from urllib.parse import urlparse
 
 from utils.log import logger
+from config.config import headers
 from utils.path import get_basedir_path
-from config.config import (headers, base_url)
 from utils.get_config import get_output_path, get_th_number
 
 log = logger()
@@ -21,10 +22,15 @@ class Downloader(object):
         self.video_id = self.get_video_id()
         self.base_dir = get_basedir_path()
         self.ts_dir = self.get_ts_dir_path()
+        self.ts_url = self.get_ts_url()
         self.output_name = self.get_output_name()
 
+    def get_ts_url(self):
+        result = urlparse(self.m3u8_url)
+        return f'{result.scheme}://{result.hostname}//m3u8/{self.video_id}/'
+
     def get_video_name(self, video_name):
-        return video_name.replace(' ','_').replace('&','_').replace(':', ' ').replace('：', ' ')
+        return video_name.replace(' ','_').replace('&','_').replace(':', '_').replace('：', '_')
 
     def get_output_name(self):
         output_dir = get_output_path()
@@ -90,7 +96,7 @@ class Downloader(object):
     def get_ts_file(self, ts_id):
         ts_file = self.ts_dir + ts_id + '.ts'
         if not os.path.exists(ts_file):
-            url = base_url + self.video_id + '/' + ts_id + '.ts'
+            url = self.ts_url + ts_id + '.ts'
             content = self.get_content(url)
             with open(ts_file, 'wb') as f:
                 f.write(content)
@@ -149,7 +155,7 @@ class Downloader(object):
                 ts_files_str += self.ts_dir + ts + '|'
             merge_name = fr'{self.base_dir}\tmp\{self.video_id}\merge{str(merge_count)}.ts'
             order_str = f'ffmpeg -i \"concat:{ts_files_str}\"  -c copy {merge_name} -y'
-            log.info(f'Merge viedeo {self.video_name} {str(merge_count)}')
+            # log.info(f'Merge viedeo {self.video_name} {str(merge_count)}')
             merge_count += 1
             self.transform(order_str)
             start += 50

@@ -42,7 +42,7 @@ def worker():
             log.info(f'Extract error: {url}')
             continue
         video_name = ''.join(page.xpath('//div[@id="videodetails"][1]/h4/text()')).strip()
-        log.info(f'url:{url} get \n\tm3u8 url: {m3u8_url}\n\t video name: {video_name}')
+        log.info(f'url:{url} get \n\tm3u8 url: {m3u8_url}\n\tvideo name: {video_name}')
         m3u8_list.append((m3u8_url, video_name))
 
 def extrcat_url(input_text):
