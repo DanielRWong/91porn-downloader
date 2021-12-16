@@ -5,9 +5,6 @@ import shutil
 from functools import partial
 
 from PyQt5 import QtGui
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QMainWindow, QDialog
 
 from common.rewriter import Rewriter
@@ -19,8 +16,7 @@ from ui.dialog2 import Ui_Dialog as Ui_Dialog2
 from ui.dialog3 import Ui_Dialog as Ui_Dialog3
 from ui.dialog4 import Ui_Dialog as Ui_Dialog4
 from ui.dialog5 import Ui_Dialog as Ui_Dialog5
-from ui.dialog6 import Ui_Dialog as Ui_Dialog6
-from config.config import th_number,output_path
+# from ui.dialog6 import Ui_Dialog as Ui_Dialog6
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -141,9 +137,9 @@ class Dialog5(QDialog, Ui_Dialog5):
         self.pushButton.clicked.connect(self.close)
 
 
-class Dialog6(QDialog, Ui_Dialog6):
-    def __init__(self, parent=None):
-        super(Dialog6, self).__init__(parent)
-        self.setupUi(self)
-        self.setWindowIcon(QtGui.QIcon("./ui/icon.png"))
+# class Dialog6(QDialog, Ui_Dialog6):
+#     def __init__(self, parent=None):
+#         super(Dialog6, self).__init__(parent)
+#         self.setupUi(self)
+#         self.setWindowIcon(QtGui.QIcon("./ui/icon.png"))
         # self.setWindowFlags(Qt.FramelessWindowHint)
