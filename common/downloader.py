@@ -146,7 +146,7 @@ class Downloader(object):
         assert ts_ids_len == ts_file_count
         start = 0
         end = 50
-        ts_files = sorted(os.listdir(self.ts_dir))
+        ts_files = sorted(ts_files, key=lambda x: int(x[:-3]))
         merge_count = 0
         while start < ts_ids_len:
             split = ts_files[start:end]
