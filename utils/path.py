@@ -19,4 +19,7 @@ def make_path(path):
     path_tuple = os.path.split(path)
     if not os.path.exists(path_tuple[0]):
         make_path(path_tuple[0])
-    os.mkdir(path)
+    try:
+        os.mkdir(path)
+    except FileExistsError:
+        pass
