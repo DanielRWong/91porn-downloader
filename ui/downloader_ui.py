@@ -17,6 +17,7 @@ from ui.dialog3 import Ui_Dialog as Ui_Dialog3
 from ui.dialog4 import Ui_Dialog as Ui_Dialog4
 from ui.dialog5 import Ui_Dialog as Ui_Dialog5
 # from ui.dialog6 import Ui_Dialog as Ui_Dialog6
+from config.config import th_number,output_path
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
