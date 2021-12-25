@@ -8,6 +8,7 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import QMainWindow, QDialog
 
 from common.rewriter import Rewriter
+from utils.path import make_path
 from common.multi_th_downloader import download_multi_thread
 from common.extracter import extrcat_url
 from ui.mainwindow import Ui_MainWindow
@@ -127,6 +128,7 @@ class Dialog4(QDialog, Ui_Dialog4):
             output_path_re2 = "\\1 '" + new_output_path.replace('\\','/') + "'"
             Rewriter.rewrite_config("./config/config.py", output_path_re1, output_path_re2)
             output_path = new_output_path
+            make_path(new_output_path)
         self.close()
 
 
